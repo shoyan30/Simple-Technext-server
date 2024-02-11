@@ -8,23 +8,44 @@ const alluser = users.users;
 app.use(cors());
 app.options('*', cors());
 
-app.get('/', (req, res) => { 
+app.get('/', (req, res) => {
     res.send('User Data is Running')
 });
 
 app.get('/users', (req, res) => {
-    res.send(users);
-})
+    const { search, sort } = req.query;
+
+    let filteredUsers = alluser;
+
+    if (search) {
+        filteredUsers = filteredUsers.filter(user => {
+            const fullName = `${user.firstName} ${user.lastName}`;
+            return fullName.toLowerCase().includes(search.toLowerCase());
+        });
+    }
+
+    if (sort) {
+        switch (sort) {
+            case 'name':
+                filteredUsers.sort((a, b) => (a.firstName + ' ' + a.lastName).localeCompare(b.firstName + ' ' + b.lastName));
+                break;
+            case 'email':
+                filteredUsers.sort((a, b) => a.email.localeCompare(b.email));
+                break;
+            case 'company.name':
+                filteredUsers.sort((a, b) => a.company.name.localeCompare(b.company.name));
+                break;
+            default:
+                return filteredUsers
+        }
+    }
+    res.send({ users: filteredUsers });
+});
 
 app.get('/users/:id', (req, res) => {
     const id = req.params.id;
-    const selectedNews = alluser.find(n => n.id == id);
-    res.send(selectedNews);
-})
-app.get('/users/firstName/:firstName', (req, res) => {
-    const name = req.params.firstName;
-    const selectedNews = alluser.find(n => n.firstName == name);
-    res.send(selectedNews);
+    const selectedUser = alluser.find(n => n.id == id);
+    res.send(selectedUser);
 })
 
 // app.get('/news', (req, res) => {
@@ -52,5 +73,5 @@ app.get('/users/firstName/:firstName', (req, res) => {
 // })
 
 app.listen(port, () => {
-    console.log(`Dragon API is running on port:${port}`)
+    console.log(`Server running on port:${port}`)
 })
